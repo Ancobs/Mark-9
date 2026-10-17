@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JARVIS">
+<meta name="theme-color" content="#000000">
+<title>J.A.R.V.I.S</title>
+<link rel="apple-touch-icon" id="ati" href="">
+<link rel="manifest" id="mf">
+<style>
+:root{--c:#00d8ff;--c2:#0a6cff;--bg:#000}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:#000;color:var(--c);font-family:"SF Mono",Menlo,Consolas,monospace;overflow:hidden;touch-action:none}
+#grid{position:fixed;inset:-60px;background:linear-gradient(rgba(0,140,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(0,140,255,.16) 1px,transparent 1px);background-size:50px 50px;animation:gm 6s linear infinite;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%)}
+@keyframes gm{to{transform:translate(50px,50px)}}
+#scan{position:fixed;left:0;right:0;height:120px;background:linear-gradient(transparent,rgba(0,216,255,.07),transparent);animation:sc 5s linear infinite;pointer-events:none}
+@keyframes sc{from{top:-120px}to{top:100%}}
+.win{position:absolute;width:min(27vw,300px);padding:14px 16px;border:1px solid rgba(0,216,255,.55);background:rgba(0,20,40,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 0 18px rgba(0,160,255,.35),inset 0 0 22px rgba(0,120,255,.15);clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));touch-action:none;z-index:5}
+.win h3{margin:0 0 8px;font-size:11px;letter-spacing:.3em;color:#7fe9ff;border-bottom:1px solid rgba(0,216,255,.3);padding-bottom:6px;display:flex;justify-content:space-between}
+.win h3 b{cursor:pointer;color:#ff6b6b}
+#wl{left:2.5%;top:9%}#wr{right:2.5%;top:9%}
+#time{font-size:clamp(30px,5vw,46px);text-shadow:0 0 14px var(--c);letter-spacing:.05em}
+.row{display:flex;justify-content:space-between;font-size:13px;margin:6px 0;color:#9eeaff}
+.row span:last-child{color:#fff}
+.dev{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0}
+.dot{width:9px;height:9px;border-radius:50%;background:#123;border:1px solid var(--c)}
+.dot.on{background:var(--c);box-shadow:0 0 10px var(--c)}
+#bars{display:flex;gap:3px;height:34px;align-items:flex-end;margin-top:8px}
+#bars i{flex:1;background:linear-gradient(var(--c),var(--c2));height:3px;box-shadow:0 0 6px var(--c)}
+#core{position:absolute;left:50%;top:45%;width:min(62vh,46vw);aspect-ratio:1;transform:translate(-50%,-50%);z-index:2}
+#cv{width:100%;height:100%}
+#title{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,2.4vw,26px);letter-spacing:.5em;text-shadow:0 0 16px var(--c);pointer-events:none;padding-left:.5em}
+#sub{position:absolute;left:50%;bottom:-6%;transform:translateX(-50%);width:130%;text-align:center;font-size:14px;color:#bff4ff;min-height:40px;text-shadow:0 0 8px var(--c)}
+#sub small{display:block;color:#5fb9d6;font-size:12px;margin-bottom:4px}
+#bar{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 10px;z-index:8}
+button{font:inherit;font-size:12px;letter-spacing:.14em;color:var(--c);background:rgba(0,30,60,.7);border:1px solid var(--c);padding:12px 16px;cursor:pointer;box-shadow:0 0 12px rgba(0,200,255,.35);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+button.on{background:var(--c);color:#001018;font-weight:700}
+button:active{transform:scale(.96)}
+#hand{position:fixed;left:0;top:0;width:60px;height:60px;border:2px dashed var(--c);border-radius:50%;display:none;pointer-events:none;z-index:50;box-shadow:0 0 16px var(--c)}
+#hand.open{background:rgba(0,216,255,.25)}#hand.grab{background:rgba(0,216,255,.6);border-style:solid}
+#cam{position:fixed;left:10px;bottom:70px;width:120px;transform:scaleX(-1);opacity:.55;border:1px solid var(--c);display:none;z-index:4}
+#boot,#modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;display:flex;align-items:center;justify-content:center;text-align:center}
+#modal{display:none;z-index:90;background:rgba(0,0,0,.8)}
+.box{max-width:640px;width:92%;max-height:88vh;overflow:auto;border:1px solid var(--c);padding:20px;background:rgba(0,18,36,.95);box-shadow:0 0 30px rgba(0,160,255,.4);text-align:left;font-size:14px;line-height:1.55;user-select:text;-webkit-user-select:text;touch-action:pan-y}
+.box h2{margin:0 0 10px;letter-spacing:.25em;font-size:14px}.box ol{padding-left:20px}.box code{color:#fff}
+input{font:inherit;background:#001a2e;color:#fff;border:1px solid var(--c);padding:9px;width:60%;user-select:text;-webkit-user-select:text}
+#boot h1{font-size:clamp(28px,6vw,60px);letter-spacing:.4em;text-shadow:0 0 24px var(--c);margin:0 0 20px}
+#vid{width:100%;display:block;margin-top:4px}
+</style>
+</head>
+<body>
+<div id="grid"></div><div id="scan"></div>
+<main>
+ <section class="win" id="wl"><h3>SISTEMA</h3><div id="time">--:--</div><div class="row"><span id="date">--</span></div>
+  <h3 style="margin-top:12px">CLIMA</h3><div class="row"><span>Estado</span><span id="wx">--</span></div><div class="row"><span>Temp</span><span id="tp">--</span></div><div class="row"><span>Humedad / Viento</span><span id="hu">--</span></div>
+  <h3 style="margin-top:12px">ENERGÍA</h3><div class="row"><span>Batería</span><span id="bt">N/D</span></div><div class="row"><span>IA local</span><span id="ai">Offline</span></div></section>
+ <section id="core"><canvas id="cv"></canvas><div id="title">J.A.R.V.I.S</div><div id="sub"><small id="heard"></small><span id="say">Sistemas en espera.</span></div></section>
+ <section class="win" id="wr"><h3>CASA</h3><div id="devs"></div><h3 style="margin-top:12px">MÚSICA</h3><div class="row"><span id="mus">Detenida</span><span id="mbtn" style="cursor:pointer;color:#fff">▶ / ❚❚</span></div><div id="bars"></div></section>
+</main>
+<nav id="bar">
+ <button id="bHey">HEY JARVIS</button><button id="bScr">VER PANTALLA</button><button id="bCasa">CONTROLAR CASA</button><button id="bIpad">CONTROLAR IPAD</button><button id="bGes">GESTOS</button><button id="bAI">IA LOCAL</button><button id="bFile">ARCHIVOS</button><button id="bAg">AGENDA</button><button id="bNews">NOTICIAS</button><input type="file" id="fi" multiple hidden accept="image/*,video/*,audio/*,.pdf,.txt,.md,.csv,.json,.doc,.docx"><button id="bInst">INSTALAR</button>
+</nav>
+<div id="hand"></div><video id="cam" muted playsinline></video>
+<div id="modal"><div class="box" id="mbox"></div></div>
+<div id="boot"><div><h1>J.A.R.V.I.S</h1><button id="bStart" style="font-size:16px;padding:16px 30px">TOCAR PARA INICIAR</button></div></div>
+
+<script>
+/* ============ CONFIGURACIÓN DE TUS ATAJOS (CONECTA AQUÍ) ============
+ Crea en la app Atajos de iOS un atajo por cada nombre de abajo, con la acción
+ "Controlar mi casa" (HomeKit). El nombre del atajo debe ser IDÉNTICO (mayúsculas y acentos).
+ Ejemplo: atajo "Encender Taller" -> Controlar [Luz del taller] -> Encender.
+ Puedes cambiar/añadir dispositivos aquí o con el botón CONTROLAR CASA. */
+const ATAJOS = {
+  'taller': {on:'Encender Taller', off:'Apagar Taller'},
+  'sala':   {on:'Encender Sala',   off:'Apagar Sala'},
+  'cuarto': {on:'Encender Cuarto', off:'Apagar Cuarto'},
+  'todo':   {on:'Encender Todo',   off:'Apagar Todo'}
+};
+/* ===================================================================== */
+
+const $=s=>document.querySelector(s);
+const N=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const LS={get:(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let user=LS.get('jv_name','Señor'), extra=LS.get('jv_dev',{}), state=LS.get('jv_state',{});
+const addr=()=>user==='Señor'?'señor':user;
+const devs=()=>Object.assign({},ATAJOS,extra);
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+/* ---------- PWA: manifest e icono generados por JS (un solo archivo) ---------- */
+function icon(sz){const c=document.createElement('canvas');c.width=c.height=sz;const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,sz,sz);x.strokeStyle='#00d8ff';x.shadowColor='#00d8ff';x.shadowBlur=sz*.06;x.lineWidth=sz*.04;x.beginPath();x.arc(sz/2,sz/2,sz*.3,0,7);x.stroke();x.lineWidth=sz*.015;x.beginPath();x.arc(sz/2,sz/2,sz*.38,0,4.5);x.stroke();x.fillStyle='#00d8ff';x.beginPath();x.arc(sz/2,sz/2,sz*.07,0,7);x.fill();return c.toDataURL('image/png')}
+$('#ati').href=icon(180);
+$('#mf').href=URL.createObjectURL(new Blob([JSON.stringify({name:'J.A.R.V.I.S',short_name:'JARVIS',start_url:location.href.split('#')[0],display:'standalone',orientation:'landscape',background_color:'#000000',theme_color:'#000000',icons:[{src:icon(512),sizes:'512x512',type:'image/png'}]})],{type:'application/manifest+json'}));
+/* Opcional (offline del cascarón): sube un sw.js con:
+   self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));
+   self.addEventListener('install',e=>e.waitUntil(caches.open('j').then(c=>c.addAll(['./','./index.html']))));  */
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+/* ---------- Reloj, clima, batería ---------- */
+function tick(){const d=new Date();$('#time').textContent=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});$('#date').textContent=d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})}
+setInterval(tick,1000);tick();
+const WX=c=>c==0?'Despejado':c<4?'Parcialmente nublado':c<50?'Niebla':c<60?'Llovizna':c<70?'Lluvia':c<80?'Nieve':c<90?'Chubascos':'Tormenta';
+let wxTxt='Sin datos del clima.';
+function weather(){if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(async p=>{try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`);const c=(await r.json()).current;$('#wx').textContent=WX(c.weather_code);$('#tp').textContent=Math.round(c.temperature_2m)+' °C';$('#hu').textContent=c.relative_humidity_2m+'% / '+Math.round(c.wind_speed_10m)+' km/h';wxTxt=`Hay ${WX(c.weather_code).toLowerCase()}, ${Math.round(c.temperature_2m)} grados y ${c.relative_humidity_2m} por ciento de humedad.`}catch{$('#wx').textContent='Sin conexión'}},()=>{$('#wx').textContent='Sin permiso GPS'},{timeout:10000})}
+setInterval(weather,900000);
+let batTxt='Safari no me deja leer la batería de este dispositivo.';
+if(navigator.getBattery)navigator.getBattery().then(b=>{const u=()=>{const p=Math.round(b.level*100);$('#bt').textContent=p+'%'+(b.charging?' ⚡':'');batTxt=`La batería está al ${p} por ciento${b.charging?' y cargando':''}.`};u();b.onlevelchange=b.onchargingchange=u});
+
+/* ---------- Casa (Atajos de iOS) ---------- */
+function runShortcut(name){location.href='shortcuts://x-callback-url/run-shortcut?name='+encodeURIComponent(name)+'&x-success='+encodeURIComponent(location.href.split('#')[0])}
+function renderCasa(){$('#devs').innerHTML=Object.keys(devs()).map(k=>`<div class="dev"><span class="dot ${state[k]?'on':''}"></span>${cap(k)} <span style="margin-left:auto;color:#fff">${state[k]?'ON':'OFF'}</span></div>`).join('')}
+function casa(key,on){const d=devs()[key];const name=d?(on?d.on:d.off):(on?'Encender ':'Apagar ')+cap(key);if(key==='todo')Object.keys(devs()).forEach(k=>state[k]=on);else state[key]=on;LS.set('jv_state',state);renderCasa();setTimeout(()=>runShortcut(name),1400);return `${on?'Encendiendo':'Apagando'} ${key==='todo'?'todo':'el '+key}, ${addr()}.`}
+renderCasa();
+
+/* ---------- Música sintética (WebAudio, sin archivos) ---------- */
+let AC,mAn,mGain,mOsc=[],playing=false;
+$('#bars').innerHTML='<i></i>'.repeat(16);
+function ctx(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
+function music(on){ctx();if(on&&!playing){mAn=AC.createAnalyser();mAn.fftSize=64;mGain=AC.createGain();mGain.gain.value=.0001;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=900;const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=.15;lg.gain.value=400;lfo.connect(lg);lg.connect(f.frequency);lfo.start();mOsc=[lfo];[110,130.8,164.8,220,261.6,329.6].forEach((fr,i)=>{const o=AC.createOscillator();o.type=i%2?'sawtooth':'triangle';o.frequency.value=fr;o.detune.value=(i-2)*4;o.connect(f);o.start();mOsc.push(o)});f.connect(mGain);mGain.connect(mAn);mAn.connect(AC.destination);mGain.gain.exponentialRampToValueAtTime(.12,AC.currentTime+2);playing=true}else if(!on&&playing){mGain.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+1);const o=mOsc;setTimeout(()=>o.forEach(x=>x.stop()),1100);playing=false}$('#mus').textContent=playing?'Ambiente Stark ♪':'Detenida'}
+$('#mbtn').onclick=()=>music(!playing);
+
+/* ---------- Voz: síntesis ---------- */
+let speaking=false,voice=null;
+function pickVoice(){const v=speechSynthesis.getVoices().filter(x=>x.lang.toLowerCase().startsWith('es'));const pref=['Jorge','Diego','Juan','Eddy','Reed','Rocko','Grandpa','Carlos','Pablo'];voice=pref.map(p=>v.find(x=>x.name.includes(p))).find(Boolean)||v.find(x=>/male|hombre/i.test(x.name))||v[0]||null}
+if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}
+function say(t){$('#say').textContent=t;if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='es-ES';if(voice)u.voice=voice;u.pitch=.5;u.rate=.9;u.volume=1;u.onstart=()=>{speaking=true;try{rec&&rec.stop()}catch{}};u.onend=u.onerror=()=>{speaking=false;if(listening)setTimeout(startRec,250)};speechSynthesis.speak(u)}
+
+/* ---------- Micrófono + anillo reactivo ---------- */
+let an=null,fd=null;
+async function startMic(){if(an)return;try{const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});const a=ctx();an=a.createAnalyser();an.fftSize=256;an.smoothingTimeConstant=.75;a.createMediaStreamSource(s).connect(an);fd=new Uint8Array(an.frequencyBinCount)}catch(e){$('#heard').textContent='Micrófono no disponible'}}
+const cv=$('#cv'),cx=cv.getContext('2d');let sm=0,rot=0;
+function fit(){const d=devicePixelRatio||1,r=cv.getBoundingClientRect();cv.width=r.width*d;cv.height=r.height*d}
+addEventListener('resize',fit);fit();
+function draw(t){const W=cv.width,H=cv.height,X=W/2,Y=H/2,R=Math.min(W,H)*.27;cx.clearRect(0,0,W,H);
+ let lvl=0;if(an){an.getByteFrequencyData(fd);let s=0;for(let i=0;i<40;i++)s+=fd[i];lvl=s/40/255}
+ if(speaking)lvl=Math.max(lvl,.3+.25*Math.sin(t/80));
+ lvl=Math.max(lvl,.05+.03*Math.sin(t/700));sm+=(lvl-sm)*.18;rot+=.004+sm*.03;
+ const g=cx.createRadialGradient(X,Y,R*.2,X,Y,R*(1.5+sm));g.addColorStop(0,'rgba(0,160,255,'+(.25+sm*.5)+')');g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.beginPath();cx.arc(X,Y,R*2,0,7);cx.fill();
+ cx.shadowColor='#00d8ff';cx.shadowBlur=14;cx.strokeStyle='#00d8ff';
+ const NB=96;cx.lineWidth=Math.max(2,W*.006);
+ for(let i=0;i<NB;i++){const a=i/NB*6.2832+rot;let v=fd?fd[(i%48)+2]/255:0;if(speaking)v=Math.max(v,.25+.35*Math.abs(Math.sin(i*.6+t/110)));const l=R*.08+v*R*.6;cx.globalAlpha=.4+v*.6;cx.beginPath();cx.moveTo(X+Math.cos(a)*R*1.05,Y+Math.sin(a)*R*1.05);cx.lineTo(X+Math.cos(a)*(R*1.05+l),Y+Math.sin(a)*(R*1.05+l));cx.stroke()}
+ cx.globalAlpha=1;cx.lineWidth=W*.012;cx.beginPath();cx.arc(X,Y,R*(1+sm*.12),0,7);cx.stroke();
+ cx.lineWidth=W*.005;cx.setLineDash([W*.04,W*.02]);cx.beginPath();cx.arc(X,Y,R*.82,-rot*2,-rot*2+6.28);cx.stroke();
+ cx.setLineDash([W*.12,W*.05,W*.01,W*.05]);cx.beginPath();cx.arc(X,Y,R*1.45,rot*1.3,rot*1.3+6.28);cx.stroke();cx.setLineDash([]);
+ cx.lineWidth=W*.003;cx.beginPath();cx.arc(X,Y,R*.6,rot*3,rot*3+4.2);cx.stroke();
+ cx.shadowBlur=0;
+ if(playing&&mAn){const b=new Uint8Array(mAn.frequencyBinCount);mAn.getByteFrequencyData(b);document.querySelectorAll('#bars i').forEach((e,i)=>e.style.height=Math.max(3,b[i]/255*34)+'px')}
+ requestAnimationFrame(draw)}
+requestAnimationFrame(draw);
+
+/* ---------- Cerebro: reglas tipo JARVIS + IA local opcional (WebLLM) ---------- */
+/* ---------- Memoria permanente (todo lo que dices queda guardado en el iPad) ---------- */
+let log=LS.get('jv_log',[]),facts=LS.get('jv_facts',[]);
+let hist=log.filter(x=>x.r==='u'||x.r==='j').slice(-6).map(x=>({role:x.r==='u'?'user':'assistant',content:x.t}));
+function logAdd(r,t){log.push({d:Date.now(),r,t:String(t).slice(0,400)});if(log.length>1500)log=log.slice(-1200);try{localStorage.setItem('jv_log',JSON.stringify(log))}catch{log=log.slice(-Math.floor(log.length/2));LS.set('jv_log',log)}}
+const STOP=new Set('que te dije de sobre del la el los las un una y en mi me es lo con por para'.split(' '));
+function recall(q){const ws=N(q).split(/\W+/).filter(w=>w.length>2&&!STOP.has(w));if(!ws.length)return null;
+ const hit=[...facts.map(t=>({t,d:0})),...log.filter(x=>x.r!=='j')].filter(x=>ws.some(w=>N(x.t).includes(w))).slice(-3);
+ return hit.length?hit.map(x=>(x.d?new Date(x.d).toLocaleDateString('es-ES',{day:'numeric',month:'short'})+': ':'')+x.t).join('. '):null}
+
+/* ---------- Cerebro: reglas tipo JARVIS + IA local ligera (SmolLM2 135M, ~100 MB, corre en CPU/WASM) ---------- */
+let llm=null;
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+async function loadLLM(){if(llm){say('La IA local ya está activa, '+addr()+'.');return}
+ try{$('#ai').textContent='Cargando…';
+  const {pipeline,env}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1');env.allowLocalModels=false;
+  llm=await pipeline('text-generation','HuggingFaceTB/SmolLM2-135M-Instruct',{dtype:'q8',device:'wasm',progress_callback:p=>{if(p.status==='progress')$('#ai').textContent=Math.round(p.progress||0)+'%'}});
+  $('#ai').textContent='SmolLM2 ✔';$('#bAI').classList.add('on');say('Núcleo de IA local en línea, '+addr()+'. Ya funciono sin internet.')}
+ catch(e){llm=null;$('#ai').textContent='Error';$('#heard').textContent='IA: '+String(e&&e.message||e).slice(0,140);say('No pude cargar el modelo local, '+addr()+'. Necesito internet la primera vez. Continúo en modo offline.')}}
+async function think(raw){const q=N(raw).replace(/[¿?¡!.,]/g,'').trim(),n=addr();let m;
+ if(m=q.match(/(?:me llamo|mi nombre es|llamame)\s+(.+)/)){user=cap(raw.trim().split(/\s+/).slice(-1)[0].replace(/[.,!?]/g,''));LS.set('jv_name',user);return `Entendido. A partir de ahora lo llamaré ${user}.`}
+ if(/como me llamo|cual es mi nombre|quien soy/.test(q))return user==='Señor'?'Aún no me ha dicho su nombre, señor. Por ahora, solo "señor".':`Usted es ${user}, y mi único propósito es servirle.`;
+ if(/olvida mi nombre/.test(q)){user='Señor';LS.set('jv_name',user);return 'Nombre borrado. Seguiré llamándole señor.'}
+ if(m=q.match(/recuerda que (.+)/)){facts.push(raw.replace(/^.*?recuerda que\s+/i,'').trim());LS.set('jv_facts',facts);return 'Anotado, '+n+'.'}
+ if(/olvida todo|borra tu memoria/.test(q)){log=[];facts=[];hist=[];LS.set('jv_log',log);LS.set('jv_facts',facts);return 'Memoria borrada, '+n+'.'}
+ if(/que recuerdas|que sabes de mi|que te he dicho|que hemos hablado/.test(q)){const u=log.filter(x=>x.r==='u').slice(-4).map(x=>x.t);return facts.length||u.length?'Tengo '+facts.length+' datos guardados y '+log.length+' registros. Lo último: '+[...facts.slice(-3),...u].slice(-4).join('. '):'Aún no tengo nada guardado, '+n+'.'}
+ if(m=q.match(/te (?:dije|comente|he dicho) (?:sobre|de|acerca de) (.+)|recuerdas (?:lo de |lo que dije de |que )?(.+)/)){const r=recall(m[1]||m[2]);return r?'Me dijo: '+r:'No tengo nada guardado sobre eso, '+n+'.'}
+ if(/^(cierra|quita|oculta)\s.*(agenda|noticias)/.test(q)){closeWin($('#wag'));closeWin($('#wnews'));return 'Hecho, '+n+'.'}
+ if(/^(agenda|agendame|agendar|agrega|agregame|agregar|anade|anademe|anadir|anota|apunta|programa|crea|pon|ponme)\b/.test(q)&&(/\b(calendario|agenda|evento|cita|reunion|recordatorio)\b/.test(q)||/^(agenda|agendame|agendar)\s/.test(q)))return addEvent(raw);
+ if(/\b(que tengo|que hay|muestra|muestrame|abre|abrir|ver|mis|mi)\b.*\b(agenda|calendario|eventos|citas|pendientes)\b|que tengo (hoy|manana|esta semana)/.test(q))return agendaSay(q);
+ if(/noticias|titulares/.test(q)){const t=(q.match(/(?:noticias|titulares) (?:de|del|sobre|acerca de) (.+)/)||[])[1];$('#say').textContent='Buscando noticias…';return await news(t&&t.replace(/\bhoy\b/,'').trim())}
+ if(/^(para|deten|pausa|cierra|quita|apaga)\s.*(musica|video|cancion|reproductor)|^(silencio|para)$/.test(q)){music(false);player.pause();closeWin($('#wmed'));return 'Reproducción detenida.'}
+ if(m=q.match(/^(?:jarvis )?(?:pon|ponme|reproduce|toca|quiero ver|quiero escuchar|muestrame)\s+(?:un |una |el |la |algo de )?(video|clip|cancion|musica)?\s*(?:de |del |sobre |llamad[ao] )?(.+)/)){
+  if(/^(musica|ambiente|musica ambiente|musica de fondo)$/.test(m[2])){music(true);return 'Reproduciendo ambiente, '+n+'.'}
+  $('#say').textContent='Buscando…';return await playMedia(/video|clip/.test(m[1]||'')||/^(quiero ver|muestrame)/.test(q)?'video':'music',m[2])}
+ if(m=q.match(/\b(enciende|encender|prende|prender|apaga|apagar)\s+(?:la |el |los |las |toda la |todo el )?(.+)/)){const on=/^(enc|pren)/.test(m[1]);let k=m[2].trim();const found=Object.keys(devs()).find(d=>k.includes(d));return casa(found||k,on)}
+ if(/\bhora\b/.test(q))return 'Son las '+new Date().toLocaleTimeString('es-ES',{hour:'numeric',minute:'2-digit'})+', '+n+'.';
+ if(/\bfecha\b|que dia/.test(q))return 'Hoy es '+new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'.';
+ if(/clima|tiempo hace|temperatura/.test(q)){weather();return wxTxt}
+ if(/bateria/.test(q))return batTxt;
+ if(/pantalla|que ves/.test(q)){verPantalla();return 'Activando sensores visuales.'}
+ if(/gesto|mano/.test(q)){gestos();return 'Iniciando seguimiento de manos.'}
+ if(/casa|luces/.test(q)){openCasa();return 'Panel de control doméstico, '+n+'.'}
+ if(/control.*(ipad|voz)/.test(q)){openIpad();return 'Estas son las instrucciones de Control por Voz.'}
+ if(m=q.match(/(?:cuanto es|calcula|cuanto son)\s+(.+)/)){const e=m[1].replace(/por|x/g,'*').replace(/entre|dividido/g,'/').replace(/mas/g,'+').replace(/menos/g,'-').replace(/,/g,'.');if(/^[\d+\-*/.() ]+$/.test(e)){try{return `El resultado es ${+Function('return '+e)().toFixed(4)}.`}catch{}}}
+ if(/quien eres|que eres|como te llamas/.test(q))return 'Soy J.A.R.V.I.S., Just A Rather Very Intelligent System. Su asistente, '+n+'.';
+ if(/gracias/.test(q))return rnd(['Es un placer, '+n+'.','Para eso estoy, '+n+'.']);
+ if(/hola|buenas|buenos dias|buenas tardes|buenas noches/.test(q))return 'Sistemas en línea. Listo para servirle, '+n+'. ¿Qué necesita?';
+ if(/chiste/.test(q))return rnd(['Le contaría uno sobre UDP, pero no sé si lo recibiría.','Dos bytes se encuentran. Uno dice: ¿te sientes mal? El otro: no, solo tengo un bit de sueño.','Un programador apaga las luces y dice: ya no hay bugs, solo oscuridad.']);
+ if(/estado|sistemas|diagnostico/.test(q))return 'Todos los sistemas funcionan dentro de parámetros normales, '+n+'. '+(llm?'Núcleo de IA local activo.':'Operando en modo offline.');
+ if(llm){try{const sys=`Eres J.A.R.V.I.S., el asistente de Tony Stark: elegante, ingenioso, leal, breve. Responde siempre en español, máximo dos frases. Llama al usuario "${n}". Datos que recuerdas: ${facts.slice(-8).join('; ')||'ninguno'}.`;const o=await llm([{role:'system',content:sys},...hist,{role:'user',content:raw}],{max_new_tokens:90,do_sample:true,temperature:.6,repetition_penalty:1.15});return o[0].generated_text.at(-1).content.trim()||'Entendido.'}catch{}}
+ return rnd(['Entendido, '+n+'. Esa consulta excede mi núcleo offline; active IA LOCAL para conversación libre.','Lo anoto, '+n+'. Con la IA local activa podré responderle con más detalle.','No tengo una rutina para eso aún, '+n+'. Puedo manejar hora, clima, casa, música, cálculos y más.'])}
+async function handle(t){$('#heard').textContent='» '+t;logAdd('u',t);const r=await think(t);logAdd('j',r);hist.push({role:'user',content:t},{role:'assistant',content:r});hist=hist.slice(-8);say(r)}
+
+/* ---------- Reconocimiento de voz (español) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,listening=false,awake=0;
+function startRec(){if(!SR||!listening||speaking)return;try{rec&&(rec.onend=null,rec.abort())}catch{}
+ rec=new SR();rec.lang='es-ES';rec.continuous=true;rec.interimResults=true;
+ rec.onresult=e=>{if(speaking)return;const r=e.results[e.results.length-1],t=r[0].transcript.trim();$('#heard').textContent='… '+t;if(!r.isFinal)return;
+  const wake=/\b(hey |oye |ey )?(jarvis|yarvis|jarbis|yarbis|jervis)\b/i;const has=wake.test(t);
+  if(has||Date.now()<awake){const cmd=t.replace(wake,'').replace(/^[\s,]+/,'').trim();if(!cmd){awake=Date.now()+8000;say('Sí, '+addr()+'.');return}awake=Date.now()+8000;handle(cmd)}};
+ rec.onerror=e=>{if(e.error==='not-allowed'){listening=false;$('#bHey').classList.remove('on');say('Permiso de reconocimiento denegado.')}};
+ rec.onend=()=>{if(listening&&!speaking)setTimeout(startRec,300)};
+ try{rec.start()}catch{}}
+$('#bHey').onclick=async()=>{if(!SR){say('Este navegador no soporta reconocimiento de voz.');return}await startMic();
+ if(listening){listening=false;try{rec.abort()}catch{};$('#bHey').classList.remove('on');$('#heard').textContent='';return}
+ listening=true;awake=Date.now()+8000;$('#bHey').classList.add('on');say('Sí, '+addr()+'.');setTimeout(startRec,900)};
+
+/* ---------- Ver pantalla ---------- */
+let scrStream=null;
+async function verPantalla(){if(scrStream){scrStream.getTracks().forEach(t=>t.stop());scrStream=null;$('#wscr')&&$('#wscr').remove();$('#bScr').classList.remove('on');return}
+ let mode='pantalla';try{if(!navigator.mediaDevices.getDisplayMedia)throw 0;scrStream=await navigator.mediaDevices.getDisplayMedia({video:true})}catch{try{mode='cámara';scrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})}catch{say('No pude acceder a la pantalla ni a la cámara, '+addr()+'.');return}}
+ const w=document.createElement('section');w.className='win';w.id='wscr';w.style.cssText='left:34%;top:52%;width:min(34vw,380px)';w.innerHTML=`<h3>VISIÓN · ${mode.toUpperCase()}<b onclick="verPantalla()">✕</b></h3><video id="vid" autoplay muted playsinline></video>`;document.body.appendChild(w);drag(w);$('#vid').srcObject=scrStream;$('#bScr').classList.add('on');
+ say(mode==='pantalla'?'Sensores visuales en línea, '+addr()+'.':'iPadOS no permite compartir la pantalla desde Safari, '+addr()+'. Uso la cámara trasera como sensor óptico. Para grabar la pantalla use el Centro de Control.')}
+$('#bScr').onclick=verPantalla;
+
+/* ---------- Reproductor interno (sin salir de Jarvis) ---------- */
+const player=new Audio();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function closeWin(w){if(!w)return;if(w.id==='wmed')player.pause();w.remove()}
+function win(id,title,body,css){closeWin($('#'+id));const w=document.createElement('section');w.className='win';w.id=id;w.style.cssText=css;w.innerHTML=`<h3>${title}<b onclick="closeWin(this.closest('.win'))">✕</b></h3>${body}`;document.body.appendChild(w);drag(w);return w}
+const tmo=(u,ms=4500)=>{const c=new AbortController();setTimeout(()=>c.abort(),ms);return fetch(u,{signal:c.signal}).then(r=>{if(!r.ok)throw 0;return r.json()})};
+/* Instancias públicas de Piped (buscan en YouTube sin API key); si todas fallan, usa vistas previas de iTunes */
+const PIPED=['https://pipedapi.kavin.rocks','https://pipedapi.adminforge.de','https://api.piped.private.coffee'];
+async function ytSearch(q){for(const b of PIPED){try{const j=await tmo(b+'/search?q='+encodeURIComponent(q)+'&filter=videos');const v=(j.items||[]).find(i=>i.url&&i.url.includes('v='));if(v)return{id:v.url.split('v=')[1].split('&')[0],title:v.title}}catch{}}return null}
+async function playMedia(kind,q){player.pause();const css='left:33%;top:48%;width:min(36vw,420px)';const yt=await ytSearch(kind==='music'?q+' audio':q);
+ if(yt){win('wmed','REPRODUCTOR',`<div style="font-size:12px;margin:4px 0">${esc(yt.title)}</div><iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen src="https://www.youtube-nocookie.com/embed/${yt.id}?autoplay=1&playsinline=1" style="width:100%;aspect-ratio:16/9;border:0"></iframe>`,css);return 'Reproduciendo '+yt.title+'.'}
+ const v=kind==='video',j=await tmo('https://itunes.apple.com/search?media='+(v?'musicVideo':'music')+'&limit=1&term='+encodeURIComponent(q)).catch(()=>null),r=j&&j.results&&j.results[0];
+ if(!r||!r.previewUrl)return 'No encontré «'+q+'», '+addr()+'.';const ti=`<div style="font-size:12px;margin:4px 0">${esc((r.trackName||q)+' — '+(r.artistName||''))}</div>`;
+ if(v)win('wmed','REPRODUCTOR',ti+`<video src="${esc(r.previewUrl)}" autoplay controls playsinline style="width:100%"></video>`,css);
+ else{player.src=r.previewUrl;player.play().catch(()=>{});win('wmed','REPRODUCTOR',ti+'<button onclick="player.paused?player.play():player.pause()">▶ / ❚❚</button>',css)}
+ return 'Reproduciendo '+(r.trackName||q)+', un fragmento de 30 segundos.'}
+
+/* ---------- Enviar fotos, videos y documentos ---------- */
+let nf=0;
+async function showFile(f){const u=URL.createObjectURL(f),t=f.type||'';let body,note='';
+ if(t.startsWith('image/'))body=`<img src="${u}" style="width:100%;display:block">`;
+ else if(t.startsWith('video/'))body=`<video src="${u}" controls playsinline style="width:100%"></video>`;
+ else if(t.startsWith('audio/'))body=`<audio src="${u}" controls style="width:100%"></audio>`;
+ else if(t==='application/pdf')body=`<iframe src="${u}" style="width:100%;height:44vh;border:0;background:#fff"></iframe>`;
+ else if(/^text\/|json|csv/.test(t)||/\.(txt|md|csv|json)$/i.test(f.name)){const x=await f.text();note=x.slice(0,600);body=`<pre style="max-height:40vh;overflow:auto;white-space:pre-wrap;font-size:12px;color:#fff;margin:0;user-select:text;-webkit-user-select:text">${esc(x.slice(0,4000))}</pre>`}
+ else body=`<p>${esc(f.name)} (${Math.round(f.size/1024)} KB). No puedo previsualizar este formato.</p>`;
+ const k=nf++%5;win('wf'+Date.now(),esc(f.name).slice(0,22),body,`left:${22+k*4}%;top:${20+k*5}%;width:min(34vw,380px)`);
+ logAdd('a',`Archivo enviado: ${f.name} (${t||'tipo desconocido'}, ${Math.round(f.size/1024)} KB)${note?'. Contenido: '+note:''}`)}
+$('#bFile').onclick=()=>$('#fi').click();
+$('#fi').onchange=async e=>{const l=[...e.target.files];for(const f of l)await showFile(f);e.target.value='';if(l.length)say(l.length>1?'Archivos recibidos, '+addr()+'.':'Recibido, '+addr()+'. Todavía no analizo imágenes ni videos, pero quedan a la vista.')};
+
+/* ---------- Agenda / calendario ---------- */
+let agenda=LS.get('jv_ag',[]);
+const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],DSEM={domingo:0,lunes:1,martes:2,miercoles:3,jueves:4,viernes:5,sabado:6};
+const fmt=s=>new Date(s).toLocaleString('es-ES',{weekday:'long',day:'numeric',month:'long',hour:'numeric',minute:'2-digit'});
+function parseEv(raw){let w=' '+raw+' ',h=null,mi=0,dur=60;const cut=re=>{const m=w.match(re);if(m)w=w.replace(re,' ');return m};
+ let m=cut(/\b(?:por|durante)\s+(\d+)\s*(horas?|minutos?)\b/i);if(m)dur=+m[1]*(/^h/i.test(m[2])?60:1);
+ m=cut(/\b(?:a las?|a la)\s+(\d{1,2})(?:[:.](\d{2}))?(?:\s+y\s+(media|cuarto))?\s*(am|pm)?(?:\s*(?:de la|en la|por la)\s+(ma[ñn]ana|tarde|noche))?/i)||cut(/\b(\d{1,2})(?:[:.](\d{2}))?()\s*(am|pm)\b()/i);
+ if(m){h=+m[1];mi=m[2]?+m[2]:m[3]==='media'?30:m[3]==='cuarto'?15:0;const ap=(m[4]||m[5]||'').toLowerCase(),pm=/pm|tarde|noche/.test(ap),am=/^am|ma[ñn]ana/.test(ap);if(pm&&h<12)h+=12;else if(am&&h===12)h=0;else if(!ap&&h>=1&&h<=7)h+=12}
+ const b=new Date();b.setHours(0,0,0,0);let day=null;
+ if(cut(/\bpasado ma[ñn]ana\b/i)){day=new Date(b);day.setDate(b.getDate()+2)}
+ else if(cut(/\bma[ñn]ana\b/i)){day=new Date(b);day.setDate(b.getDate()+1)}
+ else if(cut(/\bhoy\b/i))day=new Date(b);
+ else if(m=cut(/\b(?:el\s+)?(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i)){day=new Date(b.getFullYear(),MES.indexOf(m[2].toLowerCase()),+m[1]);if(day<b)day.setFullYear(day.getFullYear()+1)}
+ else if(m=cut(/\b(?:el\s+|este\s+|pr[oó]ximo\s+)?(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b/i)){const t=DSEM[N(m[1])];day=new Date(b);day.setDate(b.getDate()+((t-b.getDay()+7)%7||7))}
+ if(!day&&h===null)return null;
+ const st=new Date(day||b);if(h===null){h=9;mi=0}st.setHours(h,mi,0,0);if(!day&&st<=new Date())st.setDate(st.getDate()+1);
+ let t=w.replace(/^\s*(?:por favor\s+)?(?:agenda(?:me|r)?|agrega(?:me|r)?|a[ñn]ade|a[ñn]ad(?:ir|eme)|anota|apunta|programa|crea|ponme|pon)\s+/i,'').replace(/\b(?:en|a|al)\s+(?:el\s+|la\s+|mi\s+)?(?:calendario|agenda)\b/ig,' ').replace(/\b(?:un|una|el|la)\s+(?:evento|recordatorio)\s*(?:de|para|que diga)?\s*/ig,' ').replace(/\s+/g,' ').trim();
+ for(let i=0;i<5;i++)t=t.replace(/\s+(?:el|la|para|a|de|este|en|y|por)\s*$/i,'').replace(/^(?:que|de|para|a|el|la)\s+/i,'').replace(/[.,;:]+$/,'').trim();
+ return{id:''+Date.now(),t:cap(t||'Evento'),s:st.getTime(),d:dur}}
+function addEvent(raw){const e=parseEv(raw);if(!e)return 'No entendí la fecha, '+addr()+'. Diga por ejemplo: agenda dentista mañana a las 10.';agenda.push(e);agenda.sort((a,b)=>a.s-b.s);LS.set('jv_ag',agenda);openAgenda();return `Agendado: ${e.t}, ${fmt(e.s)}. Toque AÑADIR AL CALENDARIO para guardarlo en su iPad.`}
+function openAgenda(){const l=agenda.filter(e=>e.s>=Date.now()-36e5).slice(0,5),bt='style="padding:6px 9px;font-size:10px"';
+ win('wag','AGENDA',l.length?l.map(e=>`<div style="margin:9px 0;font-size:12px"><span style="color:#fff">${esc(e.t)}</span><br>${esc(fmt(e.s))}<br><button ${bt} onclick="agIcs('${e.id}')">AÑADIR AL CALENDARIO</button> <button ${bt} onclick="agG('${e.id}')">GOOGLE</button> <button ${bt} onclick="agDel('${e.id}')">✕</button></div>`).join(''):'<p>Sin eventos próximos.</p>','left:30%;top:46%;width:min(40vw,440px)')}
+function agendaSay(q){openAgenda();const b=new Date();b.setHours(0,0,0,0);let a=b.getTime(),z=a+864e5*7;if(/manana/.test(q)){a+=864e5;z=a+864e5}else if(/hoy/.test(q))z=a+864e5;const l=agenda.filter(e=>e.s>=a&&e.s<z);return l.length?`Tiene ${l.length} ${l.length>1?'eventos':'evento'}: `+l.slice(0,4).map(e=>e.t+', '+new Date(e.s).toLocaleString('es-ES',{weekday:'long',hour:'numeric',minute:'2-digit'})).join('. ')+'.':'No tiene eventos en ese periodo, '+addr()+'.'}
+const icsF=d=>new Date(d).toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+window.agIcs=id=>{const e=agenda.find(x=>x.id===id);if(!e)return;const c=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JARVIS//ES','BEGIN:VEVENT','UID:'+e.id+'@jarvis','DTSTAMP:'+icsF(Date.now()),'DTSTART:'+icsF(e.s),'DTEND:'+icsF(e.s+e.d*60000),'SUMMARY:'+e.t.replace(/[,;\\]/g,' '),'BEGIN:VALARM','TRIGGER:-PT10M','ACTION:DISPLAY','DESCRIPTION:Recordatorio','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');location.href=URL.createObjectURL(new Blob([c],{type:'text/calendar;charset=utf-8'}))};
+window.agG=id=>{const e=agenda.find(x=>x.id===id);if(e)window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(e.t)+'&dates='+icsF(e.s)+'/'+icsF(e.s+e.d*60000),'_blank')};
+window.agDel=id=>{agenda=agenda.filter(x=>x.id!==id);LS.set('jv_ag',agenda);openAgenda()};
+/* Recordatorios por voz mientras Jarvis esté abierto: 10 min antes y a la hora */
+const nt=new Set();setInterval(()=>{if(speaking)return;const n=Date.now();for(const e of agenda){const a=e.id+'a',b=e.id+'b';if(!nt.has(a)&&n>=e.s-6e5&&n<e.s){nt.add(a);say(`${cap(addr())}, en ${Math.max(1,Math.round((e.s-n)/6e4))} minutos: ${e.t}.`);return}if(!nt.has(b)&&n>=e.s&&n<e.s+12e4){nt.add(b);say(`${cap(addr())}, es hora de: ${e.t}.`);return}}},30000);
+$('#bAg').onclick=openAgenda;
+
+/* ---------- Noticias (Google News RSS vía rss2json / allorigins, sin API key) ---------- */
+const GN=q=>q?'https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=es-419&gl=US&ceid=US:es-419':'https://news.google.com/rss?hl=es-419&gl=US&ceid=US:es-419';
+async function feed(u){try{const j=await tmo('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(u),7000);if(j.items&&j.items.length)return j.items.map(i=>({t:i.title,l:i.link}))}catch{}
+ try{const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(u));const x=new DOMParser().parseFromString(await r.text(),'text/xml');return[...x.querySelectorAll('item')].map(i=>({t:i.querySelector('title').textContent,l:i.querySelector('link').textContent}))}catch{}return[]}
+async function news(topic){const it=await feed(GN(topic));if(!it.length)return 'No pude obtener las noticias, '+addr()+'. Revise la conexión.';const c=x=>x.replace(/\s+-\s+[^-]+$/,'');
+ win('wnews','NOTICIAS'+(topic?' · '+esc(topic).toUpperCase().slice(0,16):''),it.slice(0,6).map(i=>`<div style="font-size:12px;margin:7px 0;color:#fff">› ${esc(c(i.t))} <a href="${esc(i.l)}" target="_blank" rel="noopener" style="color:#7fe9ff">↗</a></div>`).join(''),'right:4%;top:46%;width:min(40vw,440px)');
+ return 'Titulares'+(topic?' de '+topic:'')+': '+it.slice(0,4).map(i=>c(i.t)).join('. ')+'.'}
+$('#bNews').onclick=async()=>{$('#say').textContent='Buscando noticias…';say(await news())};
+
+/* ---------- Modales ---------- */
+function modal(h){$('#mbox').innerHTML=h+'<p style="text-align:right"><button onclick="$(\'#modal\').style.display=\'none\'">CERRAR</button></p>';$('#modal').style.display='flex'}
+function openCasa(){const l=Object.keys(devs()).map(k=>`<div class="dev"><span class="dot ${state[k]?'on':''}"></span><b>${cap(k)}</b><span style="margin-left:auto"><button onclick="casaUI('${k}',1)">ON</button> <button onclick="casaUI('${k}',0)">OFF</button></span></div>`).join('');
+ modal(`<h2>CONTROLAR CASA</h2>${l}<p>Añadir dispositivo: <input id="nd" placeholder="ej. cocina"> <button onclick="addDev()">+</button></p><p style="color:#7fb">Crea en Atajos los atajos <code>Encender [Nombre]</code> y <code>Apagar [Nombre]</code> con la acción "Controlar mi casa". Por voz: "Jarvis, enciende el taller" / "apaga todo". Al ejecutarse, iOS abre Atajos un instante y vuelve.</p>`)}
+window.casaUI=(k,o)=>{say(casa(k,!!o));openCasa()};
+window.addDev=()=>{const k=N($('#nd').value.trim());if(!k)return;extra[k]={on:'Encender '+cap(k),off:'Apagar '+cap(k)};LS.set('jv_dev',extra);renderCasa();openCasa()};
+function openIpad(){modal(`<h2>CONTROLAR IPAD</h2><p>iOS no permite que una web controle el iPad. La forma real es el <b>Control por Voz</b> del sistema:</p><ol><li>Ajustes → Accesibilidad → <b>Control por voz</b> → Activar.</li><li>Di: <code>Mostrar números</code> o <code>Mostrar cuadrícula</code> para tocar cualquier cosa por voz.</li><li>Comandos: <code>Abrir Safari</code>, <code>Ir a inicio</code>, <code>Desplazar abajo</code>, <code>Tocar 12</code>, <code>Subir volumen</code>.</li><li>Ajustes → Accesibilidad → Control por voz → <b>Comandos</b> → crea comandos propios que ejecuten un Atajo.</li></ol>`)}
+function openInst(){modal(`<h2>INSTALAR EN iPAD</h2><ol><li>Sube <code>index.html</code> a GitHub Pages (HTTPS es obligatorio).</li><li>Ábrelo en <b>Safari</b>.</li><li>Toca Compartir → <b>"Agregar a pantalla de inicio"</b>.</li><li>Ábrela desde el icono: pantalla completa, como app real.</li></ol>`)}
+$('#bCasa').onclick=openCasa;$('#bIpad').onclick=openIpad;$('#bInst').onclick=openInst;$('#bAI').onclick=loadLLM;
+
+/* ---------- Ventanas arrastrables (táctil) ---------- */
+function place(w,x,y){x=Math.max(0,Math.min(innerWidth-w.offsetWidth,x));y=Math.max(0,Math.min(innerHeight-w.offsetHeight,y));w.style.left=x+'px';w.style.top=y+'px';w.style.right='auto';w.style.bottom='auto'}
+function drag(w){let o=null;w.addEventListener('pointerdown',e=>{if(e.target.closest('button,b,#mbtn,video,audio,pre,iframe'))return;const b=w.getBoundingClientRect();o={dx:e.clientX-b.left,dy:e.clientY-b.top};w.setPointerCapture(e.pointerId)});w.addEventListener('pointermove',e=>{if(o)place(w,e.clientX-o.dx,e.clientY-o.dy)});w.addEventListener('pointerup',()=>o=null)}
+document.querySelectorAll('.win').forEach(drag);
+
+/* ---------- Gestos: MediaPipe Hands (mano abierta = arrastra ventana) ---------- */
+const MP='https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/';let gOn=false,grab=null,hx=0,hy=0;
+const load=s=>new Promise((r,j)=>{const e=document.createElement('script');e.src=s;e.crossOrigin='anonymous';e.onload=r;e.onerror=j;document.head.appendChild(e)});
+async function gestos(){if(gOn){gOn=false;$('#bGes').classList.remove('on');$('#cam').style.display='none';$('#hand').style.display='none';const s=$('#cam').srcObject;s&&s.getTracks().forEach(t=>t.stop());return}
+ try{if(!window.Hands)await load(MP+'hands.js');const cam=$('#cam');cam.srcObject=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640,height:480}});await cam.play();cam.style.display='block';
+  const h=new Hands({locateFile:f=>MP+f});h.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.6,minTrackingConfidence:.5});h.onResults(onHand);gOn=true;$('#bGes').classList.add('on');say('Seguimiento de manos activo. Abra la mano sobre una ventana para moverla, y cierre el puño para soltarla.');
+  (async function loop(){if(!gOn)return;try{await h.send({image:cam})}catch{}requestAnimationFrame(loop)})()}catch(e){say('No pude iniciar los gestos, '+addr()+'. Revise el permiso de cámara y la conexión.')}}
+function onHand(r){const L=r.multiHandLandmarks&&r.multiHandLandmarks[0],H=$('#hand');if(!L){H.style.display='none';grab=null;return}
+ const p=L[9],tx=(1-p.x)*innerWidth,ty=p.y*innerHeight;hx+=(tx-hx)*.35;hy+=(ty-hy)*.35;
+ let up=0;[[8,6],[12,10],[16,14],[20,18]].forEach(([t,b])=>{if(L[t].y<L[b].y)up++});const open=up>=3,fist=up<=1;
+ H.style.display='block';H.style.transform=`translate(${hx-30}px,${hy-30}px)`;H.className=grab?'grab':open?'open':'';
+ if(open&&!grab){const w=document.elementsFromPoint(hx,hy).map(e=>e.closest('.win')).find(Boolean);if(w){const b=w.getBoundingClientRect();grab={w,dx:hx-b.left,dy:hy-b.top}}}
+ if(fist)grab=null;if(grab)place(grab.w,hx-grab.dx,hy-grab.dy)}
+$('#bGes').onclick=gestos;
+
+/* ---------- Arranque ---------- */
+$('#bStart').onclick=async()=>{$('#boot').style.display='none';ctx();player.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';player.play().catch(()=>{});await startMic();weather();setTimeout(()=>say(user==='Señor'?'Sistemas en línea. Listo para servirle, señor. ¿Qué necesita?':`Sistemas en línea. Listo para servirle, ${user}. ¿Qué necesita?`),300)};
+</script>
+</body>
+</html>
